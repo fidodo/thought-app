@@ -1,89 +1,120 @@
-"use client";
-import { useState } from "react";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+'use client';
+import { useState, useCallback,useEffect } from 'react';
+import { DndContext, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+} from '@dnd-kit/sortable';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEllipsisV,
   faEdit,
   faTrash,
-} from "@fortawesome/free-solid-svg-icons";
+} from '@fortawesome/free-solid-svg-icons';
+import SortableItem from './SortableItem';
+import { auth } from '../lib/firebase'; 
+import { onAuthStateChanged } from 'firebase/auth';
 
-const SortableItem = ({ id, value, onDoubleClick, timestamp, section }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const backgroundColor = section === "ideas" ? "bg-blue-100" : "bg-green-100";
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      onDoubleClick={onDoubleClick}
-      className={`${backgroundColor} p-4 shadow rounded-lg mb-2 cursor-pointer flex justify-between items-center w-full`}
-    >
-      <div>
-        <p className="text-sm text-gray-900 dark:text-gray-400">{timestamp}</p>
-        <span>{value}</span>
-      </div>
-    </div>
-  );
-};
-
-const IdeasSection = () => {
+const IdeasSection = ({user}) => {
   const [ideas, setIdeas] = useState([]);
   const [done, setDone] = useState([]);
-  const [newIdea, setNewIdea] = useState("");
+  const [newIdea, setNewIdea] = useState('');
   const [editingId, setEditingId] = useState(null);
-  const [editedText, setEditedText] = useState("");
+  const [editedText, setEditedText] = useState('');
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+
+  const ThoughtUrl = '/api/thoughts'; 
+
+ 
+
+  const loadThoughtData = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error('User not authenticated');
+      }
+console.log('idToken:', idToken);
+      const response = await fetch(ThoughtUrl, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Fetched data:', data);
+
+      setIdeas(data.thoughts);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setErrorMessage(`Error fetching data from ${ThoughtUrl}: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [auth]);
+
+  // Track authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, load thoughts
+        loadThoughtData();
+      } else {
+        // User is signed out, clear thoughts
+        setIdeas([]);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [loadThoughtData]);
+
 
   const addIdea = () => {
     if (newIdea.trim()) {
       const capitalizedIdea = capitalizeFirstLetter(newIdea);
       const timestamp = new Date().toLocaleString();
       setIdeas([...ideas, { text: capitalizedIdea, timestamp }]);
-      setNewIdea("");
+      setNewIdea('');
     }
   };
 
-  const moveToDone = (idea) => {
-    setIdeas(ideas.filter((item) => item !== idea));
+  const moveToDone = idea => {
+    setIdeas(ideas.filter(item => item !== idea));
     setDone([...done, idea]);
   };
 
-  const moveToIdeas = (idea) => {
-    setDone(done.filter((item) => item !== idea));
+  const moveToIdeas = idea => {
+    setDone(done.filter(item => item !== idea));
     setIdeas([...ideas, idea]);
   };
 
-  const deleteIdea = (ideaToDelete) => {
-    setIdeas(ideas.filter((idea) => idea.text !== ideaToDelete.text));
+  const deleteIdea = ideaToDelete => {
+    setIdeas(ideas.filter(idea => idea.text !== ideaToDelete.text));
   };
 
-  const deleteDone = (ideaToDelete) => {
-    setDone(done.filter((item) => item.text !== ideaToDelete.text));
+  const deleteDone = ideaToDelete => {
+    setDone(done.filter(item => item.text !== ideaToDelete.text));
   };
 
   function capitalizeFirstLetter(sentence) {
-    if (!sentence) return "";
+    if (!sentence) return '';
     return sentence.charAt(0).toUpperCase() + sentence.slice(1);
   }
 
-  const onDragEnd = (event) => {
+  const onDragEnd = event => {
     const { active, over } = event;
 
     if (!over) return;
@@ -93,44 +124,46 @@ const IdeasSection = () => {
 
     if (activeContainer === overContainer) {
       if (active.id !== over.id) {
-        if (activeContainer === "ideas") {
-          const oldIndex = ideas.findIndex((idea) => idea === active.id);
-          const newIndex = ideas.findIndex((idea) => idea === over.id);
+        if (activeContainer === 'ideas') {
+          const oldIndex = ideas.findIndex(idea => idea === active.id);
+          const newIndex = ideas.findIndex(idea => idea === over.id);
           setIdeas(arrayMove(ideas, oldIndex, newIndex));
-        } else if (activeContainer === "done") {
-          const oldIndex = done.findIndex((idea) => idea === active.id);
-          const newIndex = done.findIndex((idea) => idea === over.id);
+        } else if (activeContainer === 'done') {
+          const oldIndex = done.findIndex(idea => idea === active.id);
+          const newIndex = done.findIndex(idea => idea === over.id);
           setDone(arrayMove(done, oldIndex, newIndex));
         }
       }
     } else {
-      if (activeContainer === "ideas" && overContainer === "done") {
-        setIdeas(ideas.filter((idea) => idea !== active.id));
+      if (activeContainer === 'ideas' && overContainer === 'done') {
+        setIdeas(ideas.filter(idea => idea !== active.id));
         setDone([...done, active.id]);
-      } else if (activeContainer === "done" && overContainer === "ideas") {
-        setDone(done.filter((idea) => idea !== active.id));
+      } else if (activeContainer === 'done' && overContainer === 'ideas') {
+        setDone(done.filter(idea => idea !== active.id));
         setIdeas([...ideas, active.id]);
       }
     }
   };
 
-  const handleEditClick = (idea) => {
+  const handleEditClick = idea => {
     setEditingId(idea.text);
     setEditedText(idea.text);
     setMenuOpenId(null);
   };
 
   const handleSaveEdit = (idea, section) => {
-    console.log("Saved:", editedText);
+    console.log('Saved:', editedText);
     setEditingId(null);
   };
 
   return (
     <div className="w-[80%] mx-auto space-y-4">
+        {isLoading && <p>Loading...</p>}
+        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <div className="text-gray-900">
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
-            items={done.map((item) => item.text)}
+            items={done.map(item => item.text)}
             strategy={verticalListSortingStrategy}
             id="done"
           >
@@ -140,8 +173,8 @@ const IdeasSection = () => {
                   <input
                     type="text"
                     value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                    onBlur={() => handleSaveEdit(idea, "done")}
+                    onChange={e => setEditedText(e.target.value)}
+                    onBlur={() => handleSaveEdit(idea, 'done')}
                     className="border p-1 rounded w-full"
                     autoFocus
                   />
@@ -206,7 +239,7 @@ const IdeasSection = () => {
 
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
-            items={ideas.map((idea) => idea.text)}
+            items={ideas.map(idea => idea.text)}
             strategy={verticalListSortingStrategy}
             id="ideas"
           >
@@ -216,8 +249,8 @@ const IdeasSection = () => {
                   <input
                     type="text"
                     value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                    onBlur={() => handleSaveEdit(idea, "ideas")} // Save on blur
+                    onChange={e => setEditedText(e.target.value)}
+                    onBlur={() => handleSaveEdit(idea, 'ideas')} // Save on blur
                     className="border p-1 rounded w-full"
                     autoFocus
                   />
@@ -280,7 +313,7 @@ const IdeasSection = () => {
         <input
           type="text"
           value={newIdea}
-          onChange={(e) => setNewIdea(e.target.value)}
+          onChange={e => setNewIdea(e.target.value)}
           className="border p-2 rounded-lg w-full mb-2 text-gray-900 h-[250px]"
         />
         <button
@@ -295,3 +328,5 @@ const IdeasSection = () => {
 };
 
 export default IdeasSection;
+
+

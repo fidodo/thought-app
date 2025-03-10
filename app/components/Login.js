@@ -1,14 +1,25 @@
 "use client";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../firebase";
+
+import { useEffect } from "react";
+import { auth, googleProvider } from "../lib/firebase"; // Import Firebase authentication instance
+import { signInWithPopup } from "firebase/auth"; // Import the required method
 
 const Login = () => {
-  const signInWithGoogle = () => {
-    signInWithPopup(auth, provider).catch((error) => alert(error.message));
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+  }, []);
+
+  const signInWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("User signed in:", result.user);
+    } catch (error) {
+      console.error("Error signing in:", error);
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-800 dark:to-gray-900 p-4">
       {/* Hero Section */}
       <div className="text-center max-w-2xl">
         <img
@@ -28,7 +39,7 @@ const Login = () => {
 
         <button
           onClick={signInWithGoogle}
-          className="bg-blue-600 text-gray-900 px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
         >
           Sign in with Google
         </button>
