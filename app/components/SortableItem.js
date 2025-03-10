@@ -1,5 +1,5 @@
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const SortableItem = ({ id, value, onDoubleClick, timestamp, section }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -10,7 +10,7 @@ const SortableItem = ({ id, value, onDoubleClick, timestamp, section }) => {
     transition,
   };
 
-  const backgroundColor = section === 'ideas' ? 'bg-blue-100' : 'bg-green-100';
+  const backgroundColor = section === "ideas" ? "bg-blue-100" : "bg-green-100";
 
   return (
     <div

@@ -1,48 +1,61 @@
-'use client';
-import { useState, useCallback,useEffect } from 'react';
-import { DndContext, closestCenter } from '@dnd-kit/core';
+"use client";
+import { useState, useCallback, useEffect } from "react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+} from "@dnd-kit/sortable";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsisV,
   faEdit,
   faTrash,
-} from '@fortawesome/free-solid-svg-icons';
-import SortableItem from './SortableItem';
-import { auth } from '../lib/firebase'; 
-import { onAuthStateChanged } from 'firebase/auth';
+} from "@fortawesome/free-solid-svg-icons";
+import SortableItem from "./SortableItem";
+import { auth } from "../lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
-
-const IdeasSection = ({user}) => {
+const IdeasSection = ({ user }) => {
   const [ideas, setIdeas] = useState([]);
   const [done, setDone] = useState([]);
-  const [newIdea, setNewIdea] = useState('');
+  const [newIdea, setNewIdea] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [editedText, setEditedText] = useState('');
+  const [editedText, setEditedText] = useState("");
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  function filterIdeasSection(thoughts) {
+    if (!Array.isArray(thoughts) || thoughts.length === 0) {
+      return [];
+    }
+    console.log("Ideas thoughts:", thoughts);
+    return thoughts.filter((thought) => thought.section === "ideas");
+  }
 
-  const ThoughtUrl = '/api/thoughts'; 
+  function filterDoneSection(thoughts) {
+    if (!Array.isArray(thoughts) || thoughts.length === 0) {
+      return [];
+    }
+    console.log("Done thoughts:", thoughts);
+    return thoughts.filter((thought) => thought.section === "done");
+  }
 
- 
+  const ThoughtUrl = "/api/thoughts";
 
   const loadThoughtData = useCallback(async () => {
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
 
     try {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
-console.log('idToken:', idToken);
+      console.log("idToken:", idToken);
+
       const response = await fetch(ThoughtUrl, {
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -50,16 +63,34 @@ console.log('idToken:', idToken);
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
-      console.log('Fetched data:', data);
+      console.log("Fetched data:", data);
 
-      setIdeas(data.thoughts);
+      // Ensure thoughts exist in response before proceeding
+      if (Array.isArray(data.thoughts)) {
+        const ideas = filterIdeasSection(data.thoughts);
+        const done = filterDoneSection(data.thoughts);
+
+        setIdeas(ideas);
+        setDone(done);
+
+        console.log("Filtered Ideas:", ideas);
+        console.log("Filtered Done:", done);
+      } else {
+        console.error("Invalid data structure:", data);
+        setIdeas([]);
+        setDone([]);
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      setErrorMessage(`Error fetching data from ${ThoughtUrl}: ${error.message}`);
+      console.error("Error fetching data:", error);
+      setErrorMessage(
+        `Error fetching data from ${ThoughtUrl}: ${error.message}`,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -82,39 +113,166 @@ console.log('idToken:', idToken);
   }, [loadThoughtData]);
 
 
-  const addIdea = () => {
-    if (newIdea.trim()) {
-      const capitalizedIdea = capitalizeFirstLetter(newIdea);
-      const timestamp = new Date().toLocaleString();
-      setIdeas([...ideas, { text: capitalizedIdea, timestamp }]);
-      setNewIdea('');
-    }
-  };
-
-  const moveToDone = idea => {
-    setIdeas(ideas.filter(item => item !== idea));
-    setDone([...done, idea]);
-  };
-
-  const moveToIdeas = idea => {
-    setDone(done.filter(item => item !== idea));
-    setIdeas([...ideas, idea]);
-  };
-
-  const deleteIdea = ideaToDelete => {
-    setIdeas(ideas.filter(idea => idea.text !== ideaToDelete.text));
-  };
-
-  const deleteDone = ideaToDelete => {
-    setDone(done.filter(item => item.text !== ideaToDelete.text));
-  };
-
   function capitalizeFirstLetter(sentence) {
-    if (!sentence) return '';
+    if (!sentence) return "";
     return sentence.charAt(0).toUpperCase() + sentence.slice(1);
   }
 
-  const onDragEnd = event => {
+  const addIdea = async () => {
+    if (!newIdea.trim()) return;
+
+    const capitalizedIdea = capitalizeFirstLetter(newIdea);
+    const timestamp = new Date().toISOString();
+    const newThought = {
+      text: capitalizedIdea,
+      timestamp,
+      section: "ideas",
+    };
+    console.log("New thought:", newThought);
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await fetch("/api/thoughts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(newThought),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
+      }
+      console.log("Response:", response);
+      const savedThought = await response.json();
+      console.log("Saved thought:", savedThought);
+      console.log("Ideas:", ideas);
+
+       setIdeas([...ideas, savedThought]);
+      setNewIdea("");
+      loadThoughtData();
+    } catch (error) {
+      console.error("Error adding thought:", error);
+      setErrorMessage(`Error adding thought: ${error.message}`);
+    }
+  };
+
+  const moveToDone = async (idea) => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+  
+     
+      const updatedIdea = { ...idea, section: "done" };
+  
+      const response = await fetch("/api/thoughts", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ section: "done", id: idea.id }), 
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+  
+      // Update state: remove from ideas, add to done
+      setIdeas((prevIdeas) => prevIdeas.filter((item) => item.id !== idea.id));
+      setDone((prevDone) => [...prevDone, updatedIdea]);
+  
+    } catch (error) {
+      console.error("Error moving thought to done:", error);
+      setErrorMessage(`Error moving thought to done: ${error.message}`);
+    }
+  };
+  
+
+  // const moveToIdeas = (idea) => {
+  //   setDone(done.filter((item) => item !== idea));
+  //   setIdeas([...ideas, idea]);
+  // };
+
+
+  const moveToIdeas = async (idea) => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+  
+     
+      const updatedDone = { ...idea, section: "ideas" };
+  
+      const response = await fetch("/api/thoughts", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ section: "ideas", id: idea.id }), 
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+  
+      // Update state: remove from ideas, add to done
+      setDone((prevDone) => prevDone.filter((item) => item.id !== idea.id));
+      setIdeas((prevIdeas) => [...prevIdeas, updatedDone]);
+  
+    } catch (error) {
+      console.error("Error moving thought to ideas:", error);
+      setErrorMessage(`Error moving thought to ideas: ${error.message}`);
+    }
+  };
+
+  const deleteIdea = async (ideaToDelete) => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+  
+      const response = await fetch("/api/thoughts", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ id: ideaToDelete.id }), 
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+  
+      
+      setIdeas((prevIdeas) => prevIdeas.filter((idea) => idea.id !== ideaToDelete.id));
+  
+    } catch (error) {
+      console.error("Error deleting thought:", error);
+      setErrorMessage(`Error deleting thought: ${error.message}`);
+    }
+  };
+  
+
+  const deleteDone = (ideaToDelete) => {
+    setDone(done.filter((item) => item.text !== ideaToDelete.text));
+  };
+
+ 
+
+  const onDragEnd = (event) => {
     const { active, over } = event;
 
     if (!over) return;
@@ -124,46 +282,46 @@ console.log('idToken:', idToken);
 
     if (activeContainer === overContainer) {
       if (active.id !== over.id) {
-        if (activeContainer === 'ideas') {
-          const oldIndex = ideas.findIndex(idea => idea === active.id);
-          const newIndex = ideas.findIndex(idea => idea === over.id);
+        if (activeContainer === "ideas") {
+          const oldIndex = ideas.findIndex((idea) => idea === active.id);
+          const newIndex = ideas.findIndex((idea) => idea === over.id);
           setIdeas(arrayMove(ideas, oldIndex, newIndex));
-        } else if (activeContainer === 'done') {
-          const oldIndex = done.findIndex(idea => idea === active.id);
-          const newIndex = done.findIndex(idea => idea === over.id);
+        } else if (activeContainer === "done") {
+          const oldIndex = done.findIndex((idea) => idea === active.id);
+          const newIndex = done.findIndex((idea) => idea === over.id);
           setDone(arrayMove(done, oldIndex, newIndex));
         }
       }
     } else {
-      if (activeContainer === 'ideas' && overContainer === 'done') {
-        setIdeas(ideas.filter(idea => idea !== active.id));
+      if (activeContainer === "ideas" && overContainer === "done") {
+        setIdeas(ideas.filter((idea) => idea !== active.id));
         setDone([...done, active.id]);
-      } else if (activeContainer === 'done' && overContainer === 'ideas') {
-        setDone(done.filter(idea => idea !== active.id));
+      } else if (activeContainer === "done" && overContainer === "ideas") {
+        setDone(done.filter((idea) => idea !== active.id));
         setIdeas([...ideas, active.id]);
       }
     }
   };
 
-  const handleEditClick = idea => {
+  const handleEditClick = (idea) => {
     setEditingId(idea.text);
     setEditedText(idea.text);
     setMenuOpenId(null);
   };
 
   const handleSaveEdit = (idea, section) => {
-    console.log('Saved:', editedText);
+    console.log("Saved:", editedText);
     setEditingId(null);
   };
 
   return (
     <div className="w-[80%] mx-auto space-y-4">
-        {isLoading && <p>Loading...</p>}
-        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {isLoading && <p>Loading...</p>}
+      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       <div className="text-gray-900">
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
-            items={done.map(item => item.text)}
+            items={done.map((item) => item.text)}
             strategy={verticalListSortingStrategy}
             id="done"
           >
@@ -173,8 +331,8 @@ console.log('idToken:', idToken);
                   <input
                     type="text"
                     value={editedText}
-                    onChange={e => setEditedText(e.target.value)}
-                    onBlur={() => handleSaveEdit(idea, 'done')}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    onBlur={() => handleSaveEdit(idea, "done")}
                     className="border p-1 rounded w-full"
                     autoFocus
                   />
@@ -239,7 +397,7 @@ console.log('idToken:', idToken);
 
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
-            items={ideas.map(idea => idea.text)}
+            items={ideas.map((idea) => idea.text)}
             strategy={verticalListSortingStrategy}
             id="ideas"
           >
@@ -249,8 +407,8 @@ console.log('idToken:', idToken);
                   <input
                     type="text"
                     value={editedText}
-                    onChange={e => setEditedText(e.target.value)}
-                    onBlur={() => handleSaveEdit(idea, 'ideas')} // Save on blur
+                    onChange={(e) => setEditedText(e.target.value)}
+                    onBlur={() => handleSaveEdit(idea, "ideas")} // Save on blur
                     className="border p-1 rounded w-full"
                     autoFocus
                   />
@@ -313,7 +471,7 @@ console.log('idToken:', idToken);
         <input
           type="text"
           value={newIdea}
-          onChange={e => setNewIdea(e.target.value)}
+          onChange={(e) => setNewIdea(e.target.value)}
           className="border p-2 rounded-lg w-full mb-2 text-gray-900 h-[250px]"
         />
         <button
@@ -328,5 +486,3 @@ console.log('idToken:', idToken);
 };
 
 export default IdeasSection;
-
-

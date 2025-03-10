@@ -65,7 +65,10 @@ import Login from "./components/Login";
 import IdeasSection from "./components/IdeasSection";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFaceSmileWink, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFaceSmileWink,
+  faRightFromBracket,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -96,7 +99,10 @@ export default function Home() {
   return (
     <div className="p-4">
       <h1 className="flex justify-center text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent hover:from-blue-400 hover:to-green-500 transition-all duration-500">
-        <FontAwesomeIcon icon={faFaceSmileWink} className="text-yellow-400 dark:text-white px-2" />
+        <FontAwesomeIcon
+          icon={faFaceSmileWink}
+          className="text-yellow-400 dark:text-white px-2"
+        />
         THOUGHTS
       </h1>
 
