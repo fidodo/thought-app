@@ -27,6 +27,8 @@ const Login = () => {
           src="/thinking-person.svg"
           alt="Thought emoji"
           className="w-64 h-64 mx-auto mb-8"
+          width={256}
+          height={256}
         />
 
         <h1 className="text-4xl font-bold text-gray-800 mb-4">

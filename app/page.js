@@ -53,6 +53,8 @@ export default function Home() {
           src="/phido.png"
           alt="phido Logo for all phido products"
           className="h-16 rounded-lg shadow-lg hover:shadow-xl border-2 border-gray-200 hover:border-gray-300 transform hover:scale-105 transition-all duration-300 ease-in-out"
+          width={100}
+          height={100}
         />
         <button
           onClick={handleLogout}
