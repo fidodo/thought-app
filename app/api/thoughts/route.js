@@ -73,19 +73,17 @@ export async function POST(request) {
     const idToken = authHeader.split("Bearer ")[1];
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const userId = decodedToken.uid;
-    const userEmail = decodedToken.email || null; 
-    const userName = userEmail ? userEmail.split("@")[0] : "anonymous"; 
-    const createdAt = new Date().toISOString(); 
+    const userEmail = decodedToken.email || null;
+    const userName = userEmail ? userEmail.split("@")[0] : "anonymous";
+    const createdAt = new Date().toISOString();
 
-    
     const userCheck = await db.query("SELECT * FROM users WHERE id = $1", [
       userId,
     ]);
     if (userCheck.rows.length === 0) {
-      
       await db.query(
         "INSERT INTO users (id, username, email, password_hash, created_at) VALUES ($1, $2, $3, $4, $5)",
-        [userId, userName, userEmail, null, createdAt], 
+        [userId, userName, userEmail, null, createdAt],
       );
     }
 
@@ -123,25 +121,34 @@ export async function DELETE(request) {
     const { id } = await request.json();
 
     if (!id) {
-      return NextResponse.json({ error: "Missing thought ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing thought ID" },
+        { status: 400 },
+      );
     }
 
     console.log("Deleting thought:", id);
 
     const { rows } = await db.query(
       "DELETE FROM thoughts WHERE id = $1 AND user_id = $2 RETURNING *",
-      [id, userId]
+      [id, userId],
     );
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: "Thought not found or unauthorized" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Thought not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     console.log("Deleted thought:", rows[0]);
     return NextResponse.json({ deleted: true }, { status: 200 });
   } catch (error) {
     console.error("❌ Error deleting thought:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -160,24 +167,36 @@ export async function PUT(request) {
     const { id, text, section } = await request.json();
 
     if (!id || (!text && !section)) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     console.log("Updating thought:", { id, text, section });
 
     const { rows } = await db.query(
       "UPDATE thoughts SET text = COALESCE($1, text), section = COALESCE($2, section) WHERE id = $3 AND user_id = $4 RETURNING *",
-      [text, section, id, userId]
+      [text, section, id, userId],
     );
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: "Thought not found or unauthorized" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Thought not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     console.log("Updated thought:", rows[0]);
-    return NextResponse.json({ updated: true, thought: rows[0] }, { status: 200 });
+    return NextResponse.json(
+      { updated: true, thought: rows[0] },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("❌ Error updating thought:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

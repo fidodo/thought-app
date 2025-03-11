@@ -94,7 +94,7 @@ const IdeasSection = ({ user }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [auth]);
+  }, []);
 
   // Track authentication state
   useEffect(() => {
@@ -111,7 +111,6 @@ const IdeasSection = ({ user }) => {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [loadThoughtData]);
-
 
   function capitalizeFirstLetter(sentence) {
     if (!sentence) return "";
@@ -154,7 +153,7 @@ const IdeasSection = ({ user }) => {
       console.log("Saved thought:", savedThought);
       console.log("Ideas:", ideas);
 
-       setIdeas([...ideas, savedThought]);
+      setIdeas([...ideas, savedThought]);
       setNewIdea("");
       loadThoughtData();
     } catch (error) {
@@ -169,39 +168,32 @@ const IdeasSection = ({ user }) => {
       if (!idToken) {
         throw new Error("User not authenticated");
       }
-  
-     
+
       const updatedIdea = { ...idea, section: "done" };
-  
+
       const response = await fetch("/api/thoughts", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ section: "done", id: idea.id }), 
+        body: JSON.stringify({ section: "done", id: idea.id }),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
       }
-  
+
       // Update state: remove from ideas, add to done
       setIdeas((prevIdeas) => prevIdeas.filter((item) => item.id !== idea.id));
       setDone((prevDone) => [...prevDone, updatedIdea]);
-  
     } catch (error) {
       console.error("Error moving thought to done:", error);
       setErrorMessage(`Error moving thought to done: ${error.message}`);
     }
   };
-  
-
-  // const moveToIdeas = (idea) => {
-  //   setDone(done.filter((item) => item !== idea));
-  //   setIdeas([...ideas, idea]);
-  // };
-
 
   const moveToIdeas = async (idea) => {
     try {
@@ -209,27 +201,27 @@ const IdeasSection = ({ user }) => {
       if (!idToken) {
         throw new Error("User not authenticated");
       }
-  
-     
+
       const updatedDone = { ...idea, section: "ideas" };
-  
+
       const response = await fetch("/api/thoughts", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ section: "ideas", id: idea.id }), 
+        body: JSON.stringify({ section: "ideas", id: idea.id }),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
       }
-  
+
       // Update state: remove from ideas, add to done
       setDone((prevDone) => prevDone.filter((item) => item.id !== idea.id));
       setIdeas((prevIdeas) => [...prevIdeas, updatedDone]);
-  
     } catch (error) {
       console.error("Error moving thought to ideas:", error);
       setErrorMessage(`Error moving thought to ideas: ${error.message}`);
@@ -242,35 +234,34 @@ const IdeasSection = ({ user }) => {
       if (!idToken) {
         throw new Error("User not authenticated");
       }
-  
+
       const response = await fetch("/api/thoughts", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ id: ideaToDelete.id }), 
+        body: JSON.stringify({ id: ideaToDelete.id }),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
       }
-  
-      
-      setIdeas((prevIdeas) => prevIdeas.filter((idea) => idea.id !== ideaToDelete.id));
-  
+
+      setIdeas((prevIdeas) =>
+        prevIdeas.filter((idea) => idea.id !== ideaToDelete.id),
+      );
     } catch (error) {
       console.error("Error deleting thought:", error);
       setErrorMessage(`Error deleting thought: ${error.message}`);
     }
   };
-  
 
   const deleteDone = (ideaToDelete) => {
     setDone(done.filter((item) => item.text !== ideaToDelete.text));
   };
-
- 
 
   const onDragEnd = (event) => {
     const { active, over } = event;

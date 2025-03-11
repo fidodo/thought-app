@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { auth, googleProvider } from "../lib/firebase"; // Import Firebase authentication instance
-import { signInWithPopup } from "firebase/auth"; // Import the required method
+import { auth, googleProvider } from "../lib/firebase";
+import { signInWithPopup } from "firebase/auth";
+import Image from "next/image";
 
 const Login = () => {
   useEffect(() => {
@@ -22,7 +23,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-800 dark:to-gray-900 p-4">
       {/* Hero Section */}
       <div className="text-center max-w-2xl">
-        <img
+        <Image
           src="/thinking-person.svg"
           alt="Thought emoji"
           className="w-64 h-64 mx-auto mb-8"
