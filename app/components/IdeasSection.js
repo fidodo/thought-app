@@ -259,8 +259,37 @@ const IdeasSection = ({ user }) => {
     }
   };
 
-  const deleteDone = (ideaToDelete) => {
-    setDone(done.filter((item) => item.text !== ideaToDelete.text));
+ 
+
+  const deleteDone = async (ideaToDelete) => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await fetch("/api/thoughts", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ id: ideaToDelete.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
+      }
+
+      setDone((prevDone) =>
+        prevDone.filter((idea) => idea.id !== ideaToDelete.id),
+      );
+    } catch (error) {
+      console.error("Error deleting thought:", error);
+      setErrorMessage(`Error deleting thought: ${error.message}`);
+    }
   };
 
   const onDragEnd = (event) => {
@@ -300,10 +329,57 @@ const IdeasSection = ({ user }) => {
     setMenuOpenId(null);
   };
 
-  const handleSaveEdit = (idea, section) => {
-    console.log("Saved:", editedText);
-    setEditingId(null);
+  const handleSaveEdit = async (idea, section) => {
+    if (!editedText.trim()) return;
+  
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+  
+      const response = await fetch("/api/thoughts", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          id: idea.id,  
+          text: editedText,
+          section,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+      }
+  
+      const updatedThought = await response.json();
+      console.log("Updated thought:", updatedThought);
+  
+      // Update local state
+      if (section === "ideas") {
+        setIdeas((prevIdeas) =>
+          prevIdeas.map((item) =>
+            item.id === updatedThought.thought.id ? updatedThought.thought : item
+          )
+        );
+      } else {
+        setDone((prevDone) =>
+          prevDone.map((item) =>
+            item.id === updatedThought.thought.id ? updatedThought.thought : item
+          )
+        );
+      }
+  
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating thought:", error);
+      setErrorMessage(`Error updating thought: ${error.message}`);
+    }
   };
+  
 
   return (
     <div className="w-[80%] mx-auto space-y-4">
