@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { auth, googleProvider } from "../lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 import Image from "next/image";
 
 const Login = () => {
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
+    setIsClient(true);
     document.documentElement.classList.add("dark");
+    
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!isClient) return;
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log("User signed in:", result.user);
