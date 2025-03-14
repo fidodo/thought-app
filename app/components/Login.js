@@ -11,7 +11,6 @@ const Login = () => {
   useEffect(() => {
     setIsClient(true);
     document.documentElement.classList.add("dark");
-    
   }, []);
 
   const signInWithGoogle = async () => {

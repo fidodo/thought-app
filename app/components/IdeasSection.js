@@ -259,8 +259,6 @@ const IdeasSection = ({ user }) => {
     }
   };
 
- 
-
   const deleteDone = async (ideaToDelete) => {
     try {
       const idToken = await auth.currentUser?.getIdToken();
@@ -331,13 +329,13 @@ const IdeasSection = ({ user }) => {
 
   const handleSaveEdit = async (idea, section) => {
     if (!editedText.trim()) return;
-  
+
     try {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) {
         throw new Error("User not authenticated");
       }
-  
+
       const response = await fetch("/api/thoughts", {
         method: "PUT",
         headers: {
@@ -345,41 +343,46 @@ const IdeasSection = ({ user }) => {
           Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          id: idea.id,  
+          id: idea.id,
           text: editedText,
           section,
         }),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} - ${response.statusText}`,
+        );
       }
-  
+
       const updatedThought = await response.json();
       console.log("Updated thought:", updatedThought);
-  
+
       // Update local state
       if (section === "ideas") {
         setIdeas((prevIdeas) =>
           prevIdeas.map((item) =>
-            item.id === updatedThought.thought.id ? updatedThought.thought : item
-          )
+            item.id === updatedThought.thought.id
+              ? updatedThought.thought
+              : item,
+          ),
         );
       } else {
         setDone((prevDone) =>
           prevDone.map((item) =>
-            item.id === updatedThought.thought.id ? updatedThought.thought : item
-          )
+            item.id === updatedThought.thought.id
+              ? updatedThought.thought
+              : item,
+          ),
         );
       }
-  
+
       setEditingId(null);
     } catch (error) {
       console.error("Error updating thought:", error);
       setErrorMessage(`Error updating thought: ${error.message}`);
     }
   };
-  
 
   return (
     <div className="w-[80%] mx-auto space-y-4">
