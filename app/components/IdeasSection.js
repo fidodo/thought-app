@@ -17,7 +17,7 @@ import SortableItem from "./SortableItem";
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-const IdeasSection = ({ user }) => {
+const IdeasSection = () => {
   const [ideas, setIdeas] = useState([]);
   const [done, setDone] = useState([]);
   const [newIdea, setNewIdea] = useState("");
