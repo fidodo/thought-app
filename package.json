@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd thought-app-main/app && next dev",
-    "build": "cd thought-app-main/app && next build",
-    "start": "cd thought-app-main/app && next start",
-    "lint": "cd thought-app-main/app && next lint"
+    "dev": "next dev app",
+    "build": "next build app",
+    "start": "next start app",
+    "lint": "next lint app"
   },
   "dependencies": {
     "@dnd-kit/accessibility": "^3.1.1",
