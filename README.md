@@ -1,8 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+[![Issues][issues-shield]][issues-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+![Tests](https://github.com/fidodo/thought-app/actions/workflows/test-only.yml/badge.svg)
+![Vercel](https://vercelbadge.vercel.app/api/fidodo/thought-app)
+
+# Renewal Guard
+
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+
+  <h3 align="center">Thought-app</h3>
+
+  <p align="center">
+Thought App
+    <br />
+    <a href="https://github.com/fidodo/thought-app"><strong>Explore the repo »</strong></a>
+    <br />
+    <br />
+    <a href="thought-app.vercel.app">View Demo</a>
+    ·
+    <a href="https://github.com/fidodo/thought-app/issues">Report Bug</a>
+  </p>
+</p>
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repo
+
+```sh
+git clone https://github.com/fidodo/thought-app.git
+```
+
+
+ Install project's dependencies
+
+```sh
+npm install
+```
 
 ```bash
 npm run dev
@@ -14,23 +48,16 @@ pnpm dev
 bun dev
 ```
 
+## Contact
+
+Ayokunle Ogunfidodo - [@Linkedin](linkedin.com/in/ayokunle-ogunfidodo-a862a0153/)
+
+Project Link: [https://github.com/fidodo/renewal-guard](https://github.com/fidodo/thought-app)
+[Back to top](#thought-app)
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[issues-shield]: https://img.shields.io/github/issues/fidodo/thought-app.svg?style=flat-square
+[issues-url]: https://github.com/fidodo/thought-app/issues
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/ayokunle-ogunfidodo-a862a0153/
